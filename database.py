@@ -1,5 +1,11 @@
 import sqlite3
 import os
+import sys
+from colorama import init, Fore, Style
+
+# INICIALIZAMOS COLORAMA Y FORZAMOS UTF8 PARA EVITAR ERRORES CON EMOJIS
+sys.stdout.reconfigure(encoding='utf-8')
+init(autoreset=True)
 
 # CONFIGURACION DE LA BASE DE DATOS
 
@@ -177,8 +183,97 @@ def reporte_bajo_stock(limite):
             cursor.close()
             conexion.close()
 
-# INICIO DEL SCRIPT
-if __name__ == "__main__":
-    # EJECUTA INICIALIZACION
+# INTERFAZ DE USUARIO Y MENU PRINCIPAL
+
+def mostrar_menu():
+    # IMPRIME EL MENU PRINCIPAL EN LA CONSOLA CON COLORES
+    print(Fore.CYAN + Style.BRIGHT + "\n" + "="*45)
+    print(Fore.CYAN + Style.BRIGHT + "   📦 SISTEMA DE GESTIÓN DE INVENTARIO   ")
+    print(Fore.CYAN + Style.BRIGHT + "="*45)
+    print(Fore.YELLOW + "1. Registrar nuevo producto")
+    print(Fore.YELLOW + "2. Visualizar todos los productos")
+    print(Fore.YELLOW + "3. Buscar producto por ID")
+    print(Fore.YELLOW + "4. Actualizar datos de producto (Cantidad/Precio)")
+    print(Fore.YELLOW + "5. Eliminar producto")
+    print(Fore.YELLOW + "6. Reporte de bajo stock")
+    print(Fore.RED + "7. Salir")
+    print(Fore.CYAN + "="*45)
+
+def menu_principal():
+    # CONTROLADOR PRINCIPAL DEL PROGRAMA
+    # ASEGURAMOS QUE LA BASE DE DATOS Y LA TABLA EXISTAN ANTES DE EMPEZAR
     inicializar_db()
-    print("Base de datos inicializada correctamente.")
+    
+    # BUCLE INFINITO QUE MANTIENE EL PROGRAMA ABIERTO
+    while True:
+        mostrar_menu()
+        opcion = input(Fore.GREEN + Style.BRIGHT + "Seleccione una opción (1-7): ")
+        
+        if opcion == '1':
+            print(Fore.MAGENTA + "\n--- REGISTRAR PRODUCTO ---")
+            try:
+                nombre = input("Nombre del producto: ")
+                descripcion = input("Descripción: ")
+                # VALIDAMOS QUE LA CANTIDAD SEA UN ENTERO Y EL PRECIO UN NUMERO REAL
+                cantidad = int(input("Cantidad disponible: "))
+                precio = float(input("Precio: $"))
+                categoria = input("Categoría: ")
+                
+                registrar_producto(nombre, descripcion, cantidad, precio, categoria)
+            except ValueError:
+                # EVITA QUE EL PROGRAMA SE CIERRE POR UN ERROR DE TIPEO
+                print(Fore.RED + "❌ Error: Ingrese un número entero para la cantidad y un valor numérico para el precio.")
+
+        elif opcion == '2':
+            visualizar_productos()
+
+        elif opcion == '3':
+            print(Fore.MAGENTA + "\n--- BUSCAR PRODUCTO ---")
+            try:
+                id_prod = int(input("Ingrese el ID del producto: "))
+                buscar_producto(id_prod)
+            except ValueError:
+                print(Fore.RED + "❌ Error: El ID debe ser un número entero.")
+
+        elif opcion == '4':
+            print(Fore.MAGENTA + "\n--- ACTUALIZAR PRODUCTO ---")
+            try:
+                id_prod = int(input("Ingrese el ID del producto a modificar: "))
+                nueva_cantidad = int(input("Ingrese la nueva cantidad: "))
+                nuevo_precio = float(input("Ingrese el nuevo precio: $"))
+                actualizar_producto(id_prod, nueva_cantidad, nuevo_precio)
+            except ValueError:
+                print(Fore.RED + "❌ Error: Datos inválidos. Verifique que el ID y la cantidad sean enteros, y el precio numérico.")
+
+        elif opcion == '5':
+            print(Fore.MAGENTA + "\n--- ELIMINAR PRODUCTO ---")
+            try:
+                id_prod = int(input("Ingrese el ID del producto a eliminar: "))
+                # PEDIMOS CONFIRMACION ANTES DE ELIMINAR
+                confirmacion = input(Fore.RED + f"¿Está seguro que desea eliminar el ID {id_prod}? (s/n): ").lower()
+                if confirmacion == 's':
+                    eliminar_producto(id_prod)
+                else:
+                    print("Operación cancelada.")
+            except ValueError:
+                print(Fore.RED + "❌ Error: El ID debe ser un número entero.")
+
+        elif opcion == '6':
+            print(Fore.MAGENTA + "\n--- REPORTE DE BAJO STOCK ---")
+            try:
+                limite = int(input("Ingrese el límite mínimo de stock para el reporte: "))
+                reporte_bajo_stock(limite)
+            except ValueError:
+                print(Fore.RED + "❌ Error: El límite debe ser un número entero.")
+
+        elif opcion == '7':
+            print(Fore.GREEN + Style.BRIGHT + "\n¡Gracias por utilizar el Sistema de Gestión de Inventario! Hasta luego.\n")
+            # TERMINA EL BUCLE Y FINALIZA LA EJECUCION
+            break
+            
+        else:
+            print(Fore.RED + "❌ Opción no válida. Por favor, intente nuevamente eligiendo un número del 1 al 7.")
+
+# PUNTO DE ENTRADA DEL SCRIPT
+if __name__ == "__main__":
+    menu_principal()
